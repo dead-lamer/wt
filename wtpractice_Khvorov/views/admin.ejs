@@ -1,0 +1,169 @@
+<%- include('partials/header') %>
+
+<div class="page-hero">
+  <h1 class="page-title">Панель модератора</h1>
+</div>
+
+<div class="admin-tabs">
+  <a href="#sections" class="admin-tab">Разделы</a>
+  <a href="#users" class="admin-tab">Пользователи</a>
+  <a href="#stats" class="admin-tab">Статистика</a>
+</div>
+<section id="sections" class="admin-section card">
+  <h2 class="card-title">Управление разделами</h2>
+
+  <% if (sectionErrors && sectionErrors.length) { %>
+    <ul class="error-list">
+      <% for (const e of sectionErrors) { %>
+        <li class="error-item"><%= e %></li>
+      <% } %>
+    </ul>
+  <% } %>
+  <form method="POST" action="/admin/section" class="inline-form">
+    <div class="form-row">
+      <input class="form-input" type="text" name="title" placeholder="Название раздела" required>
+      <input class="form-input" type="text" name="description" placeholder="Описание (необязательно)">
+      <button type="submit" class="btn btn--primary">Создать раздел</button>
+    </div>
+  </form>
+
+  <table class="data-table" style="margin-top:1rem">
+    <thead>
+      <tr>
+        <th>Название</th>
+        <th>Создатель</th>
+        <th>Дата</th>
+        <th>Тем</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const sec of sections) { %>
+      <tr>
+        <td><a href="/section/<%= sec.sectionId %>"><%= sec.title %></a></td>
+        <td><a href="/user/<%= sec.creator ? sec.creator.userId : '' %>">
+          <%= sec.creator ? sec.creator.login : '—' %>
+        </a></td>
+        <td><%= new Date(sec.createdAt).toLocaleDateString('ru-RU') %></td>
+        <td><%= sec.topicCount || 0 %></td>
+        <td>
+          <form method="POST" action="/admin/section/<%= sec.sectionId %>/delete" style="display:inline"
+                onsubmit="return confirm('Удалить раздел «<%= sec.title %>» и ВСЕ темы в нём?')">
+            <button type="submit" class="btn btn--danger btn--sm">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+</section>
+
+<section id="users" class="admin-section card" style="margin-top:2rem">
+  <h2 class="card-title">Управление пользователями</h2>
+
+  <div class="filter-bar">
+    <span>Фильтр:</span>
+    <a href="/admin?status=" class="filter-link <%= statusFilter === '' ? 'filter-link--active' : '' %>">Все</a>
+    <a href="/admin?status=active" class="filter-link <%= statusFilter === 'active' ? 'filter-link--active' : '' %>">Активные</a>
+    <a href="/admin?status=blocked" class="filter-link <%= statusFilter === 'blocked' ? 'filter-link--active' : '' %>">Заблокированные</a>
+  </div>
+
+  <table class="data-table" style="margin-top:1rem">
+    <thead>
+      <tr>
+        <th>Логин</th>
+        <th>Роль</th>
+        <th>Статус</th>
+        <th>Дата регистрации</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% for (const u of users) { %>
+      <tr>
+        <td><a href="/user/<%= u.userId %>"><%= u.login %></a></td>
+        <td><%= u.role === 'moderator' ? 'Модератор' : 'Пользователь' %></td>
+        <td><%= u.isBlocked ? 'Заблокирован' : 'Активен' %></td>
+        <td><%= new Date(u.registeredAt).toLocaleDateString('ru-RU') %></td>
+        <td>
+          <% if (u.isBlocked) { %>
+            <form method="POST" action="/admin/user/<%= u.userId %>/unblock" style="display:inline">
+              <button type="submit" class="btn btn--success btn--sm">Разблок.</button>
+            </form>
+          <% } else { %>
+            <form method="POST" action="/admin/user/<%= u.userId %>/block" style="display:inline"
+                  onsubmit="return confirm('Заблокировать «<%= u.login %>»?')">
+              <button type="submit" class="btn btn--danger btn--sm">Блок.</button>
+            </form>
+          <% } %>
+          <a href="/user/<%= u.userId %>" class="btn btn--ghost btn--sm">Профиль</a>
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+</section>
+
+<section id="stats" class="admin-section card" style="margin-top:2rem">
+  <h2 class="card-title">Статистика активности</h2>
+
+  <form method="GET" action="/admin/stats" class="stats-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">С</label>
+        <input class="form-input" type="date" name="from" value="<%= statsParams.from || '' %>">
+      </div>
+      <div class="form-group">
+        <label class="form-label">По</label>
+        <input class="form-input" type="date" name="to" value="<%= statsParams.to || '' %>">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Раздел</label>
+        <select class="form-input" name="sectionId">
+          <option value="">Все разделы</option>
+          <% for (const sec of sections) { %>
+            <option value="<%= sec.sectionId %>"
+              <%= statsParams.sectionId == sec.sectionId ? 'selected' : '' %>>
+              <%= sec.title %>
+            </option>
+          <% } %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пользователь</label>
+        <select class="form-input" name="userId">
+          <option value="">Все пользователи</option>
+          <% for (const u of users) { %>
+            <option value="<%= u.userId %>"
+              <%= statsParams.userId == u.userId ? 'selected' : '' %>>
+              <%= u.login %>
+            </option>
+          <% } %>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary" style="align-self:flex-end">Показать</button>
+    </div>
+  </form>
+
+  <% if (statsData !== null) { %>
+    <% if (statsData.length === 0) { %>
+      <p class="empty-state" style="margin-top:1rem">Нет данных за выбранный период.</p>
+    <% } else { %>
+      <table class="data-table" style="margin-top:1rem">
+        <thead>
+          <tr><th>Дата</th><th>Сообщений</th></tr>
+        </thead>
+        <tbody>
+          <% for (const row of statsData) { %>
+          <tr>
+            <td><%= row.date %></td>
+            <td><%= row.count %></td>
+          </tr>
+          <% } %>
+        </tbody>
+      </table>
+    <% } %>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

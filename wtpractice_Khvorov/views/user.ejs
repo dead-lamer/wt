@@ -1,0 +1,102 @@
+<%- include('partials/header') %>
+
+<div class="page-hero">
+  <h1 class="page-title">Профиль: <%= profileUser.login %></h1>
+</div>
+
+<div class="profile-grid">
+  <aside class="profile-info card">
+    <dl class="profile-dl">
+      <dt>Логин</dt><dd><%= profileUser.login %></dd>
+      <dt>Роль</dt><dd class="role-badge role-badge--<%= profileUser.role %>">
+        <%= profileUser.role === 'moderator' ? 'Модератор' : 'Пользователь' %>
+      </dd>
+      <dt>Дата регистрации</dt><dd><%= new Date(profileUser.registeredAt).toLocaleDateString('ru-RU') %></dd>
+      <dt>Статус</dt><dd><%= profileUser.isBlocked ? 'Заблокирован' : 'Активен' %></dd>
+      <% if (stats) { %>
+        <dt>Сообщений</dt><dd><%= stats.messageCount %></dd>
+        <dt>Тем</dt><dd><%= stats.topicCount %></dd>
+      <% } %>
+    </dl>
+
+
+    <% if (isModerator && !isOwner) { %>
+      <div class="mod-actions">
+        <h3 class="mod-actions__title">Действия модератора</h3>
+        <% if (profileUser.isBlocked) { %>
+          <form method="POST" action="/admin/user/<%= profileUser.userId %>/unblock">
+            <button type="submit" class="btn btn--success btn--block">Разблокировать</button>
+          </form>
+        <% } else { %>
+          <form method="POST" action="/admin/user/<%= profileUser.userId %>/block"
+                onsubmit="return confirm('Заблокировать пользователя «<%= profileUser.login %>»?')">
+            <button type="submit" class="btn btn--danger btn--block">Заблокировать</button>
+          </form>
+        <% } %>
+
+        <% if (profileUser.role === 'user') { %>
+          <form method="POST" action="/admin/user/<%= profileUser.userId %>/role">
+            <input type="hidden" name="role" value="moderator">
+            <button type="submit" class="btn btn--warning btn--block" style="margin-top:0.5rem">
+              Назначить модератором
+            </button>
+          </form>
+        <% } else { %>
+          <form method="POST" action="/admin/user/<%= profileUser.userId %>/role">
+            <input type="hidden" name="role" value="user">
+            <button type="submit" class="btn btn--ghost btn--block" style="margin-top:0.5rem">
+              Снять права модератора
+            </button>
+          </form>
+        <% } %>
+      </div>
+    <% } %>
+
+    <% if (isOwner) { %>
+      <div class="password-form card" style="margin-top:1.5rem">
+        <h3 class="card-title">Сменить пароль</h3>
+        <% if (errors && errors.length) { %>
+          <ul class="error-list">
+            <% for (const e of errors) { %>
+              <li class="error-item"><%= e %></li>
+            <% } %>
+          </ul>
+        <% } %>
+        <form method="POST" action="/user/<%= profileUser.userId %>/password">
+          <div class="form-group">
+            <label class="form-label" for="currentPassword">Текущий пароль</label>
+            <input class="form-input" type="password" id="currentPassword" name="currentPassword">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="newPassword">Новый пароль</label>
+            <input class="form-input" type="password" id="newPassword" name="newPassword">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Подтверждение</label>
+            <input class="form-input" type="password" id="confirmPassword" name="confirmPassword">
+          </div>
+          <button type="submit" class="btn btn--primary">Сменить пароль</button>
+        </form>
+      </div>
+    <% } %>
+  </aside>
+
+  <section class="profile-topics">
+    <h2 class="section-heading">Темы пользователя</h2>
+    <% if (!topics || topics.length === 0) { %>
+      <p class="empty-state">Тем пока нет.</p>
+    <% } else { %>
+      <ul class="topic-list">
+        <% for (const t of topics) { %>
+          <li class="topic-list__item">
+            <a href="/topic/<%= t.topicId %>"><%= t.title %></a>
+            <span class="meta-date"><%= new Date(t.createdAt).toLocaleDateString('ru-RU') %></span>
+          </li>
+        <% } %>
+      </ul>
+    <% } %>
+  </section>
+</div>
+
+<%- include('partials/footer') %>
+

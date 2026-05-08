@@ -69,7 +69,7 @@ class MessageDao {
       order: [[sequelize.fn('DATE', sequelize.col('posted_at')), 'ASC']],
       raw: true
     });
-
+    
     return rows.map(r => ({
       date: r.date,
       count: Number(r.count)

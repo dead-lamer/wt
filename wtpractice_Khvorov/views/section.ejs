@@ -1,0 +1,114 @@
+<%- include('partials/header') %>
+
+<nav class="breadcrumb">
+  <a href="/">Главная</a> &rsaquo; <span><%= section.title %></span>
+</nav>
+
+<div class="page-hero">
+  <h1 class="page-title"><%= section.title %></h1>
+  <% if (section.description) { %>
+    <p class="page-subtitle"><%= section.description %></p>
+  <% } %>
+  <p class="meta-item">
+    Создатель: <a href="/user/<%= section.creator ? section.creator.userId : '' %>">
+      <%= section.creator ? section.creator.login : '—' %>
+    </a>
+    &nbsp;&middot;&nbsp;
+    <%= new Date(section.createdAt).toLocaleDateString('ru-RU') %>
+  </p>
+</div>
+
+<% if (errors && errors.length) { %>
+  <ul class="error-list">
+    <% for (const e of errors) { %>
+      <li class="error-item"><%= e %></li>
+    <% } %>
+  </ul>
+<% } %>
+
+
+<div class="toolbar">
+  <div class="sort-bar">
+    <span class="sort-label">Сортировка:</span>
+    <a href="/section/<%= section.sectionId %>?sort=newest&page=1"
+       class="sort-link <%= sort === 'newest' ? 'sort-link--active' : '' %>">Новые</a>
+    <a href="/section/<%= section.sectionId %>?sort=oldest&page=1"
+       class="sort-link <%= sort === 'oldest' ? 'sort-link--active' : '' %>">Старые</a>
+    <a href="/section/<%= section.sectionId %>?sort=title&page=1"
+       class="sort-link <%= sort === 'title' ? 'sort-link--active' : '' %>">По заголовку</a>
+  </div>
+</div>
+
+
+<% if (topics.length === 0) { %>
+  <div class="empty-state"><p>Тем пока нет. Создайте первую!</p></div>
+<% } else { %>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Тема</th>
+      <th>Автор</th>
+      <th>Дата создания</th>
+      <% if (currentUser && currentUser.role === 'moderator') { %>
+        <th>Действия</th>
+      <% } %>
+    </tr>
+  </thead>
+  <tbody>
+    <% for (const topic of topics) { %>
+    <tr>
+      <td><a href="/topic/<%= topic.topicId %>"><%= topic.title %></a></td>
+      <td><a href="/user/<%= topic.author ? topic.author.userId : '' %>">
+        <%= topic.author ? topic.author.login : '—' %>
+      </a></td>
+      <td><%= new Date(topic.createdAt).toLocaleString('ru-RU') %></td>
+      <% if (currentUser && currentUser.role === 'moderator') { %>
+      <td>
+        <form method="POST" action="/topic/<%= topic.topicId %>/delete" style="display:inline"
+              onsubmit="return confirm('Удалить тему «<%= topic.title %>»? Это действие необратимо.')">
+          <button type="submit" class="btn btn--danger btn--sm">Удалить</button>
+        </form>
+      </td>
+      <% } %>
+    </tr>
+    <% } %>
+  </tbody>
+</table>
+
+
+<% if (totalPages > 1) { %>
+<div class="pagination">
+  <% for (let p = 1; p <= totalPages; p++) { %>
+    <a href="/section/<%= section.sectionId %>?sort=<%= sort %>&page=<%= p %>"
+       class="page-link <%= p === currentPage ? 'page-link--active' : '' %>"><%= p %></a>
+  <% } %>
+</div>
+<% } %>
+<% } %>
+
+
+<% if (currentUser) { %>
+<section class="card create-form">
+  <h2 class="card-title">Создать тему</h2>
+  <form method="POST" action="/section/<%= section.sectionId %>/topic" enctype="multipart/form-data">
+    <div class="form-group">
+      <label class="form-label" for="title">Заголовок темы</label>
+      <input class="form-input" type="text" id="title" name="title" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="body">Текст первого сообщения</label>
+      <textarea class="form-textarea" id="body" name="body" rows="5" required></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="file">Прикрепить файл (необязательно)</label>
+      <input class="form-input" type="file" id="file" name="file">
+    </div>
+    <button type="submit" class="btn btn--primary">Создать тему</button>
+  </form>
+</section>
+<% } else { %>
+  <p class="info-note"><a href="/login">Войдите</a>, чтобы создать тему.</p>
+<% } %>
+
+<%- include('partials/footer') %>
+

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> — Форум</title>
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo">&#9670; Форум</a>
+    <nav class="nav">
+      <% if (currentUser) { %>
+        <a href="/user/<%= currentUser.userId %>" class="nav-link">
+          <span class="nav-user-icon">&#9654;</span> <%= currentUser.login %>
+        </a>
+        <% if (currentUser.role === 'moderator') { %>
+          <a href="/admin" class="nav-link nav-link--mod">Панель модератора</a>
+        <% } %>
+        <form method="POST" action="/logout" style="display:inline">
+          <button type="submit" class="btn btn--ghost btn--sm">Выйти</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="nav-link">Войти</a>
+        <a href="/register" class="btn btn--primary btn--sm">Регистрация</a>
+      <% } %>
+    </nav>
+  </div>
+</header>
+<main class="main-content">
+  <div class="container">
+

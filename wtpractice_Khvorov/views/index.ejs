@@ -1,0 +1,52 @@
+<%- include('partials/header') %>
+
+<div class="page-hero">
+  <h1 class="page-title">Разделы форума</h1>
+  <p class="page-subtitle">Выберите интересующую тему</p>
+</div>
+
+<% if (sections.length === 0) { %>
+  <div class="empty-state">
+    <p>Разделов пока нет.</p>
+  </div>
+<% } else { %>
+<div class="section-grid">
+  <% for (const sec of sections) { %>
+  <article class="section-card">
+    <div class="section-card__header">
+      <a href="/section/<%= sec.sectionId %>" class="section-card__title"><%= sec.title %></a>
+      <% if (sec.description) { %>
+        <p class="section-card__desc"><%= sec.description %></p>
+      <% } %>
+    </div>
+    <div class="section-card__meta">
+      <span class="meta-item">
+        <span class="meta-label">Создатель:</span>
+        <a href="/user/<%= sec.creator ? sec.creator.userId : '' %>"><%= sec.creator ? sec.creator.login : '—' %></a>
+      </span>
+      <span class="meta-item">
+        <span class="meta-label">Тем:</span>
+        <%= sec.topicCount || 0 %>
+      </span>
+      <span class="meta-item">
+        <span class="meta-label">Создан:</span>
+        <%= new Date(sec.createdAt).toLocaleDateString('ru-RU') %>
+      </span>
+    </div>
+    <% if (sec.lastMessage) { %>
+    <div class="section-card__last">
+      <span class="meta-label">Последнее сообщение:</span>
+      <a href="/user/<%= sec.lastMessage.author ? sec.lastMessage.author.userId : '' %>">
+        <%= sec.lastMessage.author ? sec.lastMessage.author.login : '—' %>
+      </a>
+      &mdash;
+      <%= new Date(sec.lastMessage.postedAt).toLocaleString('ru-RU') %>
+    </div>
+    <% } %>
+  </article>
+  <% } %>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>
+
